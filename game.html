@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>扶少團：服務 DNA 探測儀</title>
+    <style>
+        :root { --primary: #005DAA; --accent: #F7A823; --bg: #f0f4f8; }
+        body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+        #game-container { background: white; width: 100%; max-width: 500px; padding: 30px; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); text-align: center; }
+        .hidden { display: none; }
+        h1 { color: var(--primary); font-size: 24px; margin-bottom: 10px; }
+        p.intro { color: #666; line-height: 1.6; margin-bottom: 25px; }
+        .btn { display: block; width: 100%; padding: 16px; margin: 12px 0; border: 2px solid #e0e0e0; border-radius: 12px; background: white; color: #333; font-size: 16px; cursor: pointer; transition: 0.3s; text-align: left; }
+        .btn:hover { border-color: var(--primary); background: #f0f7ff; color: var(--primary); transform: translateY(-2px); }
+        .progress-bar { background: #eee; height: 8px; border-radius: 4px; margin-bottom: 25px; }
+        .progress { background: var(--accent); height: 100%; width: 0%; transition: 0.5s; border-radius: 4px; }
+        .result-card { background: #fffcf5; padding: 25px; border-radius: 18px; border: 2px solid var(--accent); margin-top: 20px; text-align: left; }
+        .result-title { color: var(--accent); font-weight: bold; font-size: 22px; margin-bottom: 10px; display: block; text-align: center; }
+        .result-tag { background: var(--primary); color: white; padding: 4px 12px; border-radius: 20px; font-size: 14px; margin-bottom: 15px; display: inline-block; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="start-screen">
+        <div style="font-size: 50px;">🌟</div>
+        <h1>服務 DNA 探測儀</h1>
+        <p class="intro">扶少團的夥伴，你好！<br>想知道你最適合哪種「個人服務」嗎？<br>跟隨直覺，開啟你的公益之路！</p>
+        <button class="btn" style="text-align:center; background: var(--primary); color: white; border: none;" onclick="startGame()">開始探測</button>
+    </div>
+
+    <div id="quiz-screen" class="hidden">
+        <div class="progress-bar"><div id="progress" class="progress"></div></div>
+        <h3 id="question-text" style="color: #333; margin-bottom: 20px;">問題載入中...</h3>
+        <div id="options-container"></div>
+    </div>
+
+    <div id="result-screen" class="hidden">
+        <h2 style="color: var(--primary);">探測結果揭曉</h2>
+        <div class="result-card">
+            <span class="result-tag">你的服務屬性</span>
+            <span id="result-title" class="result-title"></span>
+            <p id="result-desc" style="line-height: 1.7; color: #444;"></p>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+            <p style="font-weight: bold; color: var(--primary);">🚀 建議你的第一步行動：</p>
+            <ul id="action-list" style="padding-left: 20px; color: #555;"></ul>
+        </div>
+        <button class="btn" style="text-align:center; margin-top: 20px;" onclick="location.reload()">重新測驗</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        { q: "看到偏鄉小學缺乏書本的新聞，你的第一反應是？", a: [
+            { text: "寫張加油卡片寄給小朋友，給予情緒鼓勵", type: "陪伴者" },
+            { text: "規劃募書計畫，設定時間與目標來募集書本", type: "規劃者" },
+            { text: "立刻整理自己書櫃，親自搬去捐贈處", type: "實踐家" },
+            { text: "轉發新聞到社群，標註好友一起關注議題", type: "倡議者" }
+        ]},
+        { q: "學校義賣會要辦公益攤位，你最想負責？", a: [
+            { text: "在第一線與客人聊天，分享受贈單位的故事", type: "陪伴者" },
+            { text: "負責記帳、庫存管理與規劃遊戲動線", type: "規劃者" },
+            { text: "負責搬運重物、佈置場地與維持現場整潔", type: "實踐家" },
+            { text: "設計吸睛海報，並操作社群帳號直播宣傳", type: "倡議者" }
+        ]},
+        { q: "發現家附近的公園有長輩推輪椅很吃力，你會？", a: [
+            { text: "主動上前打招呼，詢問是否需要幫忙推一段", type: "陪伴者" },
+            { text: "記錄下不便的路段，寫建議信給里長爭取改善", type: "規劃者" },
+            { text: "隨手移開路面上阻礙輪椅前進的石塊或垃圾", type: "實踐家" },
+            { text: "拍下設施不便處發文，呼籲大家重視路權", type: "倡議者" }
+        ]},
+        { q: "如果這週末只有 15 分鐘空檔，你會選？", a: [
+            { text: "打開 Be My Eyes 用視訊協助視障者辨識物品", type: "陪伴者" },
+            { text: "上網研究不同的公益專案計畫與執行成效", type: "規劃者" },
+            { text: "帶上塑膠袋到住家巷口快閃撿垃圾 5 分鐘", type: "實踐家" },
+            { text: "將搜尋引擎改為 Ecosia，讓搜尋次數變成樹", type: "倡議者" }
+        ]}
+    ];
+
+    const results = {
+        "陪伴者": { 
+            desc: "你擁有暖心的特質，能提供最強大的情緒支持。你的人格魅力在於『傾聽』與『共感』，這在服務中是不可替代的溫度。",
+            actions: ["參加偏鄉課輔陪伴", "寫信給長青中心長輩", "下載 Be My Eyes 協助視障者"]
+        },
+        "規劃者": { 
+            desc: "你大腦邏輯清晰，懂得整合資源並訂立目標。你擅長從無到有設計活動，是團隊中的策略核心。",
+            actions: ["設計班級公益募款計畫", "整理家資捐贈地圖", "發起創意服務競賽提案"]
+        },
+        "實踐家": { 
+            desc: "你是標準的行動派，擁有極高的執行力。你不怕流汗，喜歡透過身體力行直接解決眼前看見的問題。",
+            actions: ["個人快閃淨灘/掃街", "參與捐血活動", "加入物資整理志工行列"]
+        },
+        "倡議者": { 
+            desc: "你具備強大的傳播能量，知道如何運用平台讓議題被看見。你是公益界的麥克風，能喚醒更多人的意識。",
+            actions: ["製作 SDG 議題懶人包", "經營公益倡議社群帳號", "推廣綠色搜尋引擎 Ecosia"]
+        }
+    };
+
+    let currentIdx = 0;
+    let scores = { "陪伴者": 0, "規劃者": 0, "實踐家": 0, "倡議者": 0 };
+
+    function startGame() {
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        showQuestion();
+    }
+
+    function showQuestion() {
+        const q = questions[currentIdx];
+        document.getElementById('question-text').innerText = q.q;
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.a.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'btn';
+            btn.innerText = opt.text;
+            btn.onclick = () => nextQuestion(opt.type);
+            container.appendChild(btn);
+        });
+        document.getElementById('progress').style.width = `${((currentIdx) / questions.length) * 100}%`;
+    }
+
+    function nextQuestion(type) {
+        scores[type]++;
+        currentIdx++;
+        if (currentIdx < questions.length) {
+            showQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+        const topType = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
+        
+        document.getElementById('result-title').innerText = topType;
+        document.getElementById('result-desc').innerText = results[topType].desc;
+        
+        const list = document.getElementById('action-list');
+        list.innerHTML = '';
+        results[topType].actions.forEach(act => {
+            const li = document.createElement('li');
+            li.innerText = act;
+            li.style.marginBottom = "8px";
+            list.appendChild(li);
+        });
+    }
+</script>
+
+</body>
+</html>
